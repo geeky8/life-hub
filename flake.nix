@@ -45,5 +45,31 @@
             ];
           };
         };
-      });
+
+        # `nix run <hub>#sync-skills` (or `nix run .#sync-skills` once
+        # forwarded by a consumer's own flake) copies this hub's skills/
+        # into ./.github/skills/<name> of whatever directory it's run
+        # from. Only the named skill subfolders are touched, so any
+        # project-local custom skills placed alongside them are left
+        # alone. Re-run after `nix flake update life-hub` to sync.
+        apps.sync-skills = {
+          type = "app";
+          program = "${pkgs.writeShellApplication {
+            name = "sync-skills";
+            runtimeInputs = [ pkgs.rsync ];
+            text = ''
+              set -euo pipefail
+              hub_skills="${self}/skills"
+              target="''${1:-.github/skills}"
+              mkdir -p "$target"
+              for skill_dir in "$hub_skills"/*/; do
+                name="$(basename "$skill_dir")"
+                mkdir -p "$target/$name"
+                rsync -a --delete --chmod=u+w "$skill_dir" "$target/$name/"
+                echo "synced: $target/$name"
+              done
+              echo "done. skills synced into $target/"
+            '';
+          }}/bin/sync-skills";
+        };
 }
