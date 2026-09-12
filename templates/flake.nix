@@ -29,5 +29,11 @@
         # project only wants one half of the toolset.
         devShells.general = life-hub.devShells.${system}.general;
         devShells.mcp = life-hub.devShells.${system}.mcp;
+
+        # Forwards the hub's skill-sync app so you can just run
+        # `nix run .#sync-skills` from inside this project (instead of
+        # typing the full life-hub flake reference each time). Copies
+        # life-hub/skills/* into ./.github/skills/* of this project.
+        apps.sync-skills = life-hub.apps.${system}.sync-skills;
       });
 }
