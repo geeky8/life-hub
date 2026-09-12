@@ -72,4 +72,67 @@
             '';
           }}/bin/sync-skills";
         };
+
+        # One-shot setup for a NEW or EXISTING project directory:
+        # `nix run <hub>#bootstrap` — drops in flake.nix + .envrc (only
+        # if not already present, so it never clobbers an existing
+        # project's own flake), points them at this hub, runs
+        # `direnv allow` if direnv is installed, and syncs skills.
+        # Override the hub location with LIFE_HUB_URL if needed, e.g.
+        # LIFE_HUB_URL="github:you/life-hub" nix run .../life-hub#bootstrap
+        apps.bootstrap = {
+          type = "app";
+          program = "${pkgs.writeShellApplication {
+            name = "bootstrap";
+            runtimeInputs = [ pkgs.rsync ];
+            text = ''
+              set -euo pipefail
+              hub_url="''${LIFE_HUB_URL:-git+file://$HOME/life-hub}"
+              target_dir="''${1:-.}"
+              cd "$target_dir"
+
+              if [ -f flake.nix ]; then
+                echo "flake.nix already exists here — leaving it as-is."
+                echo "  (add life-hub as an input manually if you want to merge it in)"
+              else
+                cp "${self}/templates/flake.nix" ./flake.nix
+                sed -i.bak "s#life-hub.url = \"git+file:///home/YOUR_USERNAME/life-hub\";#life-hub.url = \"$hub_url\";#" ./flake.nix
+                rm -f ./flake.nix.bak
+                echo "created flake.nix -> life-hub: $hub_url"
+              fi
+
+              if [ -f .envrc ]; then
+                echo ".envrc already exists here — leaving it as-is."
+              else
+                cp "${self}/templates/.envrc" ./.envrc
+                echo "created .envrc"
+              fi
+
+              if command -v direnv >/dev/null 2>&1; then
+                direnv allow . || true
+              fi
+
+              mkdir -p .github/skills
+              for skill_dir in "${self}/skills"/*/; do
+                name="$(basename "$skill_dir")"
+                mkdir -p ".github/skills/$name"
+                rsync -a --delete --chmod=u+w "$skill_dir" ".github/skills/$name/"
+              done
+              echo "synced skills into .github/skills/"
+              echo "bootstrap complete. run 'nix develop' (or cd back in, if using direnv)."
+            '';
+          }}/bin/bootstrap";
+        };
+      }) // {
+        # `nix flake init -t git+file:///Users/YOU/life-hub` (or the
+        # github: url once pushed) scaffolds flake.nix + .envrc into an
+        # empty/new directory directly from Nix itself, no hub-specific
+        # app required. Note: you still need to hand-edit the
+        # YOUR_USERNAME placeholder afterwards — `bootstrap` above does
+        # that substitution for you automatically.
+        templates.default = {
+          path = ./templates;
+          description = "life-hub project starter: flake.nix + .envrc";
+        };
+      };
 }
