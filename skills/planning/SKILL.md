@@ -14,6 +14,17 @@ This skill overrides the default "just implement it" behavior. When active, **no
 
 ## Procedure
 
+### 0. Bootstrap the Nix devShell (new projects only — compulsory)
+If the task is starting a **new project in a directory that has zero files created yet**, before anything else — including before drafting the plan in step 3 — set up the project's Nix devShell and direnv wiring. This is not optional and is not part of the negotiable plan; do it, then continue with steps 1+ for the actual feature work.
+
+- Create `flake.nix` and `.envrc` at the project root, wired to the central life-hub, either by:
+  - running `nix run github:geeky8/life-hub#bootstrap` (or the local path equivalent) in the project directory, or
+  - copying [templates/flake.nix](../../templates/flake.nix) and life-hub's `templates/.envrc` by hand if `bootstrap` isn't available.
+- Run `direnv allow` so the shell auto-loads (mention this to the user if direnv isn't installed/hooked into their shell yet).
+- Edit the copied `flake.nix`'s `devShells` so it actually contains the toolchain/runtime this specific project needs (language, package manager, formatters, etc.) — don't leave it as the generic example.
+- Never tell the user to `brew install` / `npm install -g` / `pip install --user` etc. for project tooling — add it to the devShell instead. Every dependency the project needs to build/run/test must be reachable by entering the devShell, nothing installed globally.
+- As the project grows and needs new tools or runtimes, update `flake.nix`'s `devShells` accordingly as part of whatever step introduces that dependency — keeping the flake current is an ongoing obligation for the life of the project, not a one-time setup.
+
 ### 1. Restate the goal
 One or two sentences confirming what is being asked, in your own words.
 
