@@ -49,9 +49,13 @@
         # `nix run <hub>#sync-skills` (or `nix run .#sync-skills` once
         # forwarded by a consumer's own flake) copies this hub's skills/
         # into ./.github/skills/<name> of whatever directory it's run
-        # from. Only the named skill subfolders are touched, so any
+        # from, and also refreshes ./AGENTS.md from templates/AGENTS.md.
+        # Only the named skill subfolders + AGENTS.md are touched, so any
         # project-local custom skills placed alongside them are left
-        # alone. Re-run after `nix flake update life-hub` to sync.
+        # alone. NOTE: AGENTS.md is fully overwritten every run (hub-owned,
+        # like skills/) — don't hand-edit it in a project if you plan to
+        # keep re-running this. Re-run after `nix flake update life-hub`
+        # to pick up the latest hub commit.
         apps.sync-skills = {
           type = "app";
           program = "${pkgs.writeShellApplication {
@@ -68,16 +72,20 @@
                 rsync -a --delete --chmod=u+w "$skill_dir" "$target/$name/"
                 echo "synced: $target/$name"
               done
-              echo "done. skills synced into $target/"
+              cp "${self}/templates/AGENTS.md" ./AGENTS.md
+              echo "synced: AGENTS.md"
+              echo "done. skills synced into $target/, AGENTS.md refreshed."
             '';
           }}/bin/sync-skills";
         };
 
         # One-shot setup for a NEW or EXISTING project directory:
-        # `nix run <hub>#bootstrap` — drops in flake.nix + .envrc + AGENTS.md
-        # (only if not already present, so it never clobbers an existing
-        # project's own files), points flake.nix at this hub, runs
-        # `direnv allow` if direnv is installed, and syncs skills.
+        # `nix run <hub>#bootstrap` — drops in flake.nix + .envrc (only if
+        # not already present, so it never clobbers an existing project's
+        # own files), points flake.nix at this hub, runs `direnv allow` if
+        # direnv is installed, and syncs skills + AGENTS.md (AGENTS.md is
+        # always (re)written here too — see apps.sync-skills for the
+        # ongoing-refresh path used after `nix flake update life-hub`).
         # Override the hub location with LIFE_HUB_URL if needed, e.g.
         # LIFE_HUB_URL="github:you/life-hub" nix run .../life-hub#bootstrap
         apps.bootstrap = {
