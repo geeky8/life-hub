@@ -74,9 +74,9 @@
         };
 
         # One-shot setup for a NEW or EXISTING project directory:
-        # `nix run <hub>#bootstrap` — drops in flake.nix + .envrc (only
-        # if not already present, so it never clobbers an existing
-        # project's own flake), points them at this hub, runs
+        # `nix run <hub>#bootstrap` — drops in flake.nix + .envrc + AGENTS.md
+        # (only if not already present, so it never clobbers an existing
+        # project's own files), points flake.nix at this hub, runs
         # `direnv allow` if direnv is installed, and syncs skills.
         # Override the hub location with LIFE_HUB_URL if needed, e.g.
         # LIFE_HUB_URL="github:you/life-hub" nix run .../life-hub#bootstrap
@@ -96,7 +96,7 @@
                 echo "  (add life-hub as an input manually if you want to merge it in)"
               else
                 cp "${self}/templates/flake.nix" ./flake.nix
-                sed -i.bak "s#life-hub.url = \"git+file:///home/YOUR_USERNAME/life-hub\";#life-hub.url = \"$hub_url\";#" ./flake.nix
+                sed -i.bak "s#life-hub.url = \"github:geeky8/life-hub\";#life-hub.url = \"$hub_url\";#" ./flake.nix
                 rm -f ./flake.nix.bak
                 echo "created flake.nix -> life-hub: $hub_url"
               fi
@@ -106,6 +106,13 @@
               else
                 cp "${self}/templates/.envrc" ./.envrc
                 echo "created .envrc"
+              fi
+
+              if [ -f AGENTS.md ]; then
+                echo "AGENTS.md already exists here — leaving it as-is."
+              else
+                cp "${self}/templates/AGENTS.md" ./AGENTS.md
+                echo "created AGENTS.md"
               fi
 
               if command -v direnv >/dev/null 2>&1; then
