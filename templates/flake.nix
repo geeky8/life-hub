@@ -5,9 +5,11 @@
   # It pulls its devShells directly from the central life-hub repo, so
   # running `nix flake update` in the project pulls in new hub changes.
   #
-  # ⚠️  REPLACE THE PLACEHOLDER BELOW:
-  #     - Linux/NixOS:  git+file:///home/YOUR_USERNAME/life-hub
-  #     - macOS:        git+file:///Users/YOUR_USERNAME/life-hub
+  # life-hub is public on GitHub, so this works unmodified on any
+  # machine. If you'd rather point at a local clone instead (e.g. for
+  # offline work), override with:
+  #     git+file:///home/YOUR_USERNAME/life-hub   (Linux/NixOS)
+  #     git+file:///Users/YOUR_USERNAME/life-hub  (macOS)
   # ---------------------------------------------------------------------
   description = "Example project - inherits tools from the central life-hub";
 
@@ -15,7 +17,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
 
-    life-hub.url = "git+file:///home/YOUR_USERNAME/life-hub";
+    life-hub.url = "github:geeky8/life-hub";
   };
 
   outputs = { self, nixpkgs, flake-utils, life-hub }:

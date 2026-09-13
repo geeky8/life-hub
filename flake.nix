@@ -87,7 +87,7 @@
             runtimeInputs = [ pkgs.rsync ];
             text = ''
               set -euo pipefail
-              hub_url="''${LIFE_HUB_URL:-git+file://$HOME/life-hub}"
+              hub_url="''${LIFE_HUB_URL:-github:geeky8/life-hub}"
               target_dir="''${1:-.}"
               cd "$target_dir"
 
